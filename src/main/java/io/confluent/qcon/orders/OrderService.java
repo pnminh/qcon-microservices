@@ -3,6 +3,7 @@ package io.confluent.qcon.orders;
 import io.confluent.qcon.orders.domain.Order;
 import io.confluent.qcon.orders.domain.OrderState;
 import io.confluent.qcon.orders.domain.Schemas;
+import io.confluent.qcon.orders.domain.Schemas.Topics.OrderSerde;
 import io.confluent.qcon.orders.utils.LoadConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.Callback;
@@ -263,6 +264,21 @@ public class OrderService implements Service {
 
         log.info("running GET on this node");
         // TODO: Implement GET that only responds when there is an order with state VALIDATED
+        log.info("GET order with validated state");
+        Order order = ordersStore().get(id);
+        try{
+            if(order == null || order.getState() == null 
+            || (!order.getState().equals(OrderState.VALIDATED) && !order.getState().equals(OrderState.FAILED))){
+                log.info("order not yet found or is not in validated state");
+                outstandingRequests.put(id, new FilteredResponse<>(asyncResponse, (orderId, orderObj) -> true));
+            }else{
+                asyncResponse.resume(order.getState());
+            }
+        }catch(InvalidStateStoreException e){
+            log.info("Delaying request for " + id + " because state store is not ready.");
+            outstandingRequests.put(id, new FilteredResponse<>(asyncResponse, (orderId, orderObj) -> true));
+        }
+        
     }
 
     /**
