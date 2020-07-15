@@ -1,21 +1,19 @@
 package io.confluent.qcon.orders.utils;
 
-import io.confluent.qcon.orders.domain.Order;
-import io.confluent.qcon.orders.domain.OrderState;
-import io.confluent.qcon.orders.domain.Product;
-import io.confluent.qcon.orders.serde.JsonSerializer;
+import java.io.IOException;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadLocalRandom;
-
-import static io.confluent.qcon.orders.domain.OrderState.CREATED;
+import io.confluent.qcon.orders.domain.Order;
+import io.confluent.qcon.orders.domain.OrderState;
+import io.confluent.qcon.orders.domain.Product;
+import io.confluent.qcon.orders.serde.JsonSerializer;
 
 public class ProduceOrders {
 

@@ -9,4 +9,4 @@ echo "NOTE: starting our validation service"
 java -cp target/uber-orders-service-1.0.0-SNAPSHOT.jar io.confluent.qcon.orders.OrderDetailsService &
 
 echo "NOTE: starting to consume results - both new and validated orders"
-ccloud consume -t orders
+ccloud kafka topic consume orders

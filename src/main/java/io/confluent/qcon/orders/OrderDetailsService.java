@@ -1,5 +1,8 @@
 package io.confluent.qcon.orders;
 
+import static io.confluent.qcon.orders.utils.MicroserviceShutdown.addShutdownHookAndBlock;
+import static java.util.Collections.singletonList;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Properties;
@@ -7,11 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import io.confluent.qcon.orders.domain.Order;
-import io.confluent.qcon.orders.domain.OrderState;
-import io.confluent.qcon.orders.domain.OrderValidationResult;
-import io.confluent.qcon.orders.domain.Schemas;
-import io.confluent.qcon.orders.utils.LoadConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -19,11 +17,15 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.connect.source.SourceTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.confluent.qcon.orders.utils.MicroserviceShutdown.addShutdownHookAndBlock;
-import static java.util.Collections.singletonList;
+import io.confluent.qcon.orders.domain.Order;
+import io.confluent.qcon.orders.domain.OrderState;
+import io.confluent.qcon.orders.domain.OrderValidationResult;
+import io.confluent.qcon.orders.domain.Schemas;
+import io.confluent.qcon.orders.utils.LoadConfigs;
 
 /**
  * Validates the details of each order.
@@ -69,10 +71,14 @@ public class OrderDetailsService implements Service {
 
                 for (ConsumerRecord<String, Order> record : records) {
                     Order order = record.value();
+                    System.out.println("Get order state: " + order.getState());
                     if (order.getState() == OrderState.CREATED) {
                         // TODO: Validate the order (using validate())
+                        OrderValidationResult orderValidationResult = validate(order);
                         // TODO: create a ProducerRecord from the order and result (see record())
+                        ProducerRecord<String,Order> producerRecord = record(order, orderValidationResult);
                         // TODO: then produce the result to Kafka using the existing producer
+                        producer.send(producerRecord);
                     }
                 }
             }
